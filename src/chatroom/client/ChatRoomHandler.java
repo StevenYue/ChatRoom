@@ -5,6 +5,7 @@ import java.io.IOException;
 import java.util.Date;
 
 import javax.swing.JOptionPane;
+import javax.swing.SwingUtilities;
 import javax.swing.event.ListSelectionEvent;
 
 import static chatroom.constants.ChatRoomConstant.*;
@@ -34,10 +35,14 @@ public class ChatRoomHandler {
 			}
 			this.gui.ID = userID;
 			this.gui.setTitle(userID + "  Online......");
+			
 			this.gui.listeningThread = new Thread(this.gui.client);
 			this.gui.listeningThread.start();
 			this.gui.client.sendMSG(READY_FOR_BROADCAST);
 			this.gui.isConnected = true;
+			
+			
+//			this.gui.startUndatingOnlineUserList();
 		} catch (IOException e) {
 			PopUpWindow.infoBox(CONNECTION_ERROR_MSG, CONNECTION_ERROR_TITLE);
 		}
@@ -50,6 +55,7 @@ public class ChatRoomHandler {
 		this.gui.isConnected = false;
 		this.gui.textFielduserName.setText("");
 		this.gui.listModel.clear();
+		this.gui.onlineUserSet.clear();
 		this.gui.setTitle("Chat Room");
 		
 	}
@@ -99,7 +105,7 @@ public class ChatRoomHandler {
 			int A[] = this.gui.onlineUserList.getSelectedIndices();
 			this.gui.targetUsers.clear();
 			for(Integer i:A){
-				String name = (String)this.gui.listModel.get(i);
+				String name = (String)this.gui.listModel.getElementAt(i);
 				if(!this.gui.targetUsers.contains(name)){
 					this.gui.targetUsers.add(name);
 				}

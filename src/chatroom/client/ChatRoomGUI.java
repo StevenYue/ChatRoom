@@ -26,6 +26,8 @@ import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.ListSelectionModel;
+import javax.swing.SwingUtilities;
+import javax.swing.SwingWorker;
 import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultStyledDocument;
 
@@ -43,7 +45,7 @@ public class ChatRoomGUI extends JFrame{
 	private JScrollPane spOnlineUsersList;
 	public JEditorPane epOnlineUsersList;
 	public JList<String> onlineUserList;
-	ChatRoomListModel listModel;
+	public DefaultListModel<String> listModel;
 	
 	private JScrollPane spTypeIn;
 	public JTextPane epTypeIn;
@@ -74,6 +76,7 @@ public class ChatRoomGUI extends JFrame{
 	public boolean isConnected = false;
 	public Thread listeningThread;
 	public HashSet<String> targetUsers = null;
+	public HashSet<String> onlineUserSet;
 	
 	public ChatRoomGUI(){
 		super("Chat Room");
@@ -87,7 +90,7 @@ public class ChatRoomGUI extends JFrame{
 		handler = new ChatRoomHandler(this);
 		contentSB = new StringBuffer();
 		targetUsers = new HashSet<String>();
-		
+		onlineUserSet = new HashSet<String>();
 		initComponents();
 		myLayout();
 	}
@@ -132,7 +135,7 @@ public class ChatRoomGUI extends JFrame{
 //		list.setLayoutOrientation(JList.HORIZONTAL_WRAP);
 //		list.setVisibleRowCount(-1);
 
-		listModel = new ChatRoomListModel();
+		listModel = new DefaultListModel<String>();
 		onlineUserList = new JList<String>(listModel);
 		onlineUserList.setFont(FONT_DISPLAY);
 		onlineUserList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
@@ -248,15 +251,27 @@ public class ChatRoomGUI extends JFrame{
 		this.pack();
 	}
 	
-	class ChatRoomListModel extends DefaultListModel<String>{
-		public void addd(String s){
-			super.addElement(s);
-		    fireIntervalAdded(this, 0, this.size());
-		}
-		public void removee(int i){
-			this.remove(i);
-			fireIntervalRemoved(this, 0, this.size());
-		}
-		
+	
+	/**
+	 * this method still won't solve the Jlist update issue,
+	 * Have to make sure UI update happens only in event dispatch thread
+	 */
+	public void startUndatingOnlineUserList(){
+		SwingWorker<Void,Void> worker = new SwingWorker<Void,Void>() {
+			protected Void doInBackground() throws Exception {
+				while(true){
+					if(onlineUserSet.size() != listModel.getSize()){
+						listModel.clear();
+						for(String s:onlineUserSet){
+							listModel.addElement(s);
+						}
+							
+					}
+				}
+				
+			}
+		};
+		worker.execute();
 	}
+	
 }
